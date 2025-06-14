@@ -12,9 +12,10 @@
 	(http://cdl.uta.edu/cpm/)  
   に存在します。  
 
- 8080シミュレータ + CP/Mは cpm.man  
-  CP/Mのインストールは install.doc  
-  CP/M上のユーティリティは omake.man  
+ 8080シミュレータ + CP/Mは man/cpm.man  
+  CP/Mのインストールは man/install.txt  
+  CP/M上のユーティリティは man/omake.man  
+  Windows WSL Ubuntuのメモ wsl-memo.txt  
   にそれぞれ説明してあります。  
 
 

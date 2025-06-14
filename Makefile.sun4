@@ -1,0 +1,41 @@
+#
+#	Makefile for 8080 emulator
+#		by S.Takeoka
+#
+#	 If the byte order of your machine is like 68K then define B_ENDIAN,
+#	or VAX like then define L_ENDIAN.
+#	 If you want a 'trace' and a 'break point' with the monitor
+#	then define TRACE.
+LIB_DIR = /usr/local/lib/
+BIN_DIR = /usr/local/bin/
+
+CFLAGS =  -O4 -DB_ENDIAN -DPARITY -DEMACS #-DDEBUG -DVT_VT
+#CFLAGS = -DB_ENDIAN -DPARITY -DWORDSTAR
+#CFLAGS = -O4 -DB_ENDIAN -DPARITY -DEMACS
+#CFLAGS = -I. -DB_ENDIAN -DPARITY -DTRACE -DEMACS
+
+
+all: cpm
+
+#
+#	8080 emulator
+#
+80OBJECTS =	mon.o bios.o i80.o getopt.o bdos.o ccp.o main.o lined.o
+80SRC =		mon.c bios.c i80.c getopt.c bdos.c ccp.c main.c lined.c
+
+cpm: ${80OBJECTS}
+	${CC} ${CFLAGS} -o cpm ${80OBJECTS} -ltermcap
+
+#
+#	install
+#
+install:
+	cp cpm /usr/local/bin/cpm
+	cp bios64.sys /usr/local/lib/bios64.sys
+
+#
+#	clean
+#
+clean:
+	rm -f *.o cpm
+

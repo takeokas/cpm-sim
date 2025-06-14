@@ -1,0 +1,5 @@
+# Windows WSL Ubuntu用メモ
+
+sudo apt install cc
+sudo apt install make
+sudo apt install ncurses-dev

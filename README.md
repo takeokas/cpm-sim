@@ -1,5 +1,4 @@
-# cpm-sim
-# CP/M and i8080 CPU Simulator  
+# cpm-sim , CP/M and i8080 CPU Simulator  
 # i8080 CPU シミュレータ + CP/M エミュレータ  
 ##		1998/Jun/03 竹岡 尚三(Shozo TAKEOKA)
 ## このシステムは8080 CPUをソフトウェアでシミュレートするプログラムと、CP/M Ver2.2をUNIX下でシミュレートするプログラムの組み合わせです。

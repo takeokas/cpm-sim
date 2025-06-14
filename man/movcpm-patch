@@ -1,0 +1,94 @@
+>From: mwilson@crash.cts.com (Marc Wilson)
+Newsgroups: comp.os.cpm
+Subject: MOVCPM fix
+Keywords: MOVCPM SYNCRONIZATION ERROR patch info
+Message-ID: <1542@crash.cts.com>
+Date: 17 Feb 90 20:28:17 GMT
+Reply-To: mwilson@crash.cts.com (Marc Wilson)
+Organization: San Diego Mesa College, San Diego, CA.
+Lines: 82
+
+
+     Here is the ultimate solution to the MOVCPM problem.  Disable the serial
+# checks entirely.  I'm surprised that no one has suggested this yet.
+
+     I had to do this a long time ago, when I replaced DRI's BDOS with one
+of the PD replacements, and needed to run MOVCPM to generate a bootable
+floppy.
+
+     Note that this information is specific to a particular copy of MOVCPM.
+Your patch point is almost guaranteed to NOT be in the same place.  But, in
+looking at over a dozen copies of MOVCPM from as many manufacturers, I found
+that:
+
+	1) The code around the patch point always looks the same ( that
+	   portion is DRI's, not the vendor's )
+
+	2) The patch point has always been within 80h bytes of the point
+	    specified in this file.
+
+     Also... I did NOT write this patch.  I found it on a local BBS, MANY
+moons ago.  It's not my fault if you screw up your copy of MOVCPM.  Do
+NOT do this on an original disk!
+
+MOVCPM.FIX:
+
+
+   I recenly tried to help a friend generate a new system
+on my machine, using his copy of MOVCPM,and we were greeted
+with, "SYNCHRONIZATION ERROR" followed by the machine quiting.
+After talking to another friend, I was informed that the
+problem was caused by a serial number mismatch between my
+system and his copy of MOVCPM. My friend further stated that
+there was "NO WAY" around this protection. After pondering the
+problem a while I decided to start disassembling MOVCPM with
+the help of the "L" command in DDT. What follows is the
+result of my efforts.
+
+Begining at 2C0 I found the following code:
+
+-L2C0 
+02C0	POP	D
+02C1	LXI	D,1200
+02C4	LHLD	037A
+02C7	MVI	C,6
+02C9	LDAX	D
+02CA	CMP	M
+02CB	JNZ	025A
+02CE	INX	H
+02CF	INX	D
+02D0	DCR	C
+02D1	JNZ	02C9
+
+I then did the following substitutions:
+
+-S2CB
+02CB C2 00
+02CC 5A 00
+02CD 02 00
+02CE 23 .
+
+
+After the above changes do a SAVE 40 MOVCPMNU.COM and you have
+a version of MOVCPM that will run on any machine.
+
+   With the above changes under my belt I decided to do some
+more poking around in MOVCPM.COM and came up with the following
+addresses that might arouse your curosity.
+
+	B5F,	1200,	D28
+
+	Best of Luck,
+
+			A HACKER
+
+-- 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Marc Wilson
+     ARPA: ...!crash!mwilson@nosc.mil
+           ...!crash!pnet01!pro-sol!mwilson@nosc.mil
+     UUCP: [ cbosgd | hp-sdd!hplabs | sdcsvax | nosc ]!crash!mwilson
+     INET: mwilson@crash.CTS.COM
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+

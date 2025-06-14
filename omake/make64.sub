@@ -1,0 +1,10 @@
+xsub
+mac bios64
+ddt
+f100 6ff 0
+ibios64.hex
+r700
+g0
+save 6 bios64.$$$$$$
+hex bios64.$$$$$$ >bios64.sys
+

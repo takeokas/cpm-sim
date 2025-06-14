@@ -1,0 +1,31 @@
+;
+;	cpm config. file
+;
+
+;loose_term
+
+;bios	/usr/local/lib/bios64.sys
+bios	../../bios64.sys
+
+;com_path /usr/local/lib/cpm/com80/
+;lib_path /usr/local/lib/cpm/lib80/
+com_path ../../cpm-com/
+lib_path ../../cpm-com/
+
+; environment flags
+lib_srch	1
+verbose		1
+ccp_line_upper	1
+file_name_low	1
+
+
+; auto execute command on cold start
+;startup  'submit x'
+
+; Drive setting
+;d:	path_name
+
+A:	.
+B:	/home/take
+
+

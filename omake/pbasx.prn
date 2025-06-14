@@ -1,0 +1,1239 @@
+
+
+                ;
+                ;	PALO ALTO TINY BASIC
+                ;		original	by Dr.WANG
+                ;		for CP/M 2.2	by S.TAKEOKA
+                ;
+ 0008 =         back$spc	equ	8
+                ;
+ 0000 =         BOOT	EQU	0
+ 0005 =         BDOS	EQU	BOOT+5
+ 0100 =         TPA	EQU	100H
+ 6F00 =         VTOP	EQU	6F00H	;VARIABLE TOP ADRS
+ 7000 =         MSTK	EQU	7000H
+ 8000 =         STACK	EQU	8000H
+                ;
+ 0100           	ORG	TPA
+                ;
+ 0100 310080    	LXI	SP,STACK
+ 0103 21000A    	lxi	h,otop		;new text
+ 0106 22E008    	shld	obtm
+ 0109 CDB008    	CALL	INIT
+                ;
+                START:	;DI		;RESTART FROM ERR
+ 010C 310080    	LXI	SP,STACK
+ 010F C3AE01    	JMP   	ENTRY
+                ;
+ 0112 7C        COMPR:	MOV	A,H		;COMPAIR DE,HL
+ 0113 BA        	CMP	D
+ 0114 C0        	RNZ
+ 0115 7D        	MOV	A,L
+ 0116 BB        	CMP	E
+ 0117 C9        	RET
+                ;
+ 0118 1A        SKPBL:	LDAX	D
+ 0119 FE20      	CPI	' '
+ 011B C0        	RNZ
+ 011C 13        	INX	D
+ 011D C31801    	jmp	skpbl
+ 0120 C9        	RET
+                ;
+                ;
+ 0121 CD1801    TSTV:	CALL	SKPBL	;TEST VARIABLE
+ 0124 D640      	SUI	'@'
+ 0126 D8        	RC
+ 0127 C24501    	JNZ	TSTV1
+ 012A 13        	INX	D
+ 012B CD1606    	CALL	EXPR0
+ 012E 29        	DAD	H
+ 012F DA9301    	JC	ERROR
+ 0132 D5        	PUSH	D
+ 0133 EB        	XCHG
+ 0134 CD5A06    	CALL	RSIZE
+ 0137 CD1201    	CALL	COMPR
+ 013A DA1007    	JC	SYSO1
+ 013D 21006F    	LXI 	H,VTOP
+ 0140 CD7D06    	CALL	DIFF
+ 0143 D1        	POP	D
+ 0144 C9        	RET
+                ;
+ 0145 FE1B      TSTV1:	CPI	'Z'-'@'+1	;'@' TO 'Z' ?
+ 0147 3F        	CMC
+ 0148 D8        	RC
+ 0149 13        	INX	D
+ 014A 21006F    	LXI	H,VTOP
+ 014D 07        	RLC
+ 014E 85        	ADD	L
+ 014F 6F        	MOV	L,A
+ 0150 3E00      	MVI	A,0
+ 0152 8C        	ADC	H
+ 0153 67        	MOV	H,A
+ 0154 C9        	RET
+                ;
+ 0155 E3        TEST:	XTHL		;TEST CHARACTOR
+ 0156 CD1801    	CALL   	SKPBL
+ 0159 BE        	CMP M
+ 015A 23        TEST1:	INX	H
+ 015B CA6501    	JZ	TSTEQ
+ 015E C5        	PUSH	B
+ 015F 4E        	MOV	C,M	;FETCH SKIP NUM.
+ 0160 0600      	MVI	B,0
+ 0162 09        	DAD	B
+ 0163 C1        	POP	B
+ 0164 1B        	DCX	D
+ 0165 13        TSTEQ:	INX	D
+ 0166 23        	INX	H
+ 0167 E3        	XTHL
+ 0168 C9        	RET
+                ;
+ 0169 210000    GINT:	LXI	H,0	;GET INTEGER
+ 016C 44        	MOV	B,H
+ 016D CD1801    	CALL	SKPBL
+ 0170 FE30      GETI1:	CPI	'0'
+ 0172 D8        	RC		;NOT NUM THEN RET
+ 0173 FE3A      	CPI	'9'+1
+ 0175 D0        	RNC
+ 0176 3EF0      	MVI	A,0F0H
+ 0178 A4        	ANA	H
+ 0179 C29301    	JNZ	ERROR
+ 017C 04        	INR	B
+ 017D C5        	PUSH	B
+ 017E 44        	MOV	B,H
+ 017F 4D        	MOV	C,L
+ 0180 29        	DAD	H
+ 0181 29        	DAD	H
+ 0182 09        	DAD	B
+ 0183 29        	DAD	H
+ 0184 1A        	LDAX	D
+ 0185 13        	INX	D
+ 0186 E60F      	ANI	0FH
+ 0188 85        	ADD	L
+ 0189 6F        	MOV	L,A
+ 018A 3E00      	MVI	A,0
+ 018C 8C        	ADC	H
+ 018D 67        	MOV	H,A
+ 018E C1        	POP	B
+ 018F 1A        	LDAX	D
+ 0190 F27001    	JP	GETI1
+                ;
+ 0193 D5        ERROR:	PUSH	D
+ 0194 119A01    ERR1:	LXI	D,HOWMS
+ 0197 C3DF06    	JMP	LEMS1
+                ;
+ 019A 484F573F  HOWMS:	DB	'HOW?'
+ 019E 0D        	DB	0DH
+ 019F 4F4B      OKMES:	DB	'OK'
+ 01A1 0D        	DB	0DH
+ 01A2 574841543FWHTMS	DB	'WHAT?'
+ 01A7 0D        	DB	0DH
+ 01A8 534F525259SRYMS:	DB	'SORRY'
+ 01AD 0D        	DB	0DH
+                ;
+ 01AE CD2108    ENTRY:	CALL	CRLF
+ 01B1 119F01    	LXI	D,OKMES
+ 01B4 AF        	XRA	A
+ 01B5 CD4007    	CALL	MSG
+ 01B8 21BF01    	LXI	H,ST2+1
+ 01BB 22CE08    	SHLD	COBJ
+ 01BE 210000    ST2:	LXI	H,0
+ 01C1 22D408    	SHLD	FCNTR
+ 01C4 22D008    	SHLD	RSTCK
+                ;
+ 01C7 3E3E      GETC:	MVI	A,'>'	;PROMPT
+ 01C9 CD6E08    	CALL	GETL
+ 01CC D5        	PUSH	D
+ 01CD 110009    	LXI	D,LBUF
+ 01D0 CD6901    	CALL	GINT
+ 01D3 CD1801    	CALL	SKPBL
+ 01D6 7C        	MOV	A,H
+ 01D7 B5        	ORA	L
+ 01D8 32E208    	STA	DRCT
+ 01DB C1        	POP	B	;BC:=END OF LINE
+ 01DC CABF02    	JZ	KWCPR	;LINE NO.=0 THEN CMD
+ 01DF 1B        INSRT:	DCX	D
+ 01E0 7C        	MOV	A,H
+ 01E1 12        	STAX	D
+ 01E2 1B        	DCX	D
+ 01E3 7D        	MOV	A,L
+ 01E4 12        	STAX	D
+ 01E5 C5        	PUSH	B	;SAVE L END
+ 01E6 D5        	PUSH	D	;SAVE L TOP
+ 01E7 79        	MOV	A,C
+ 01E8 93        	SUB	E
+ 01E9 F5        	PUSH	PSW	;SAVE L LEN
+ 01EA CD1607    	CALL	SRCH
+ 01ED D5        	PUSH	D	;SAVE CURRENT LINE
+ 01EE C20102    	JNZ	MOVE
+ 01F1 D5        	PUSH	D	;EXIST SAME LINE
+ 01F2 CD3407    	CALL	SKIPL
+ 01F5 C1        	POP	B
+ 01F6 2AE008    	LHLD	OBTM
+ 01F9 CDC207    	CALL	TRNSF	;ERASE OLD LINE
+ 01FC 60        	MOV	H,B
+ 01FD 69        	MOV	L,C
+ 01FE 22E008    	SHLD	OBTM	;UPDATE OBTM
+                ;
+ 0201 C1        MOVE:	POP	B	;BC:=CURRENT LINE
+ 0202 2AE008    	LHLD	OBTM
+ 0205 F1        	POP	PSW	;L LEN
+ 0206 E5        	PUSH	H	;SAVE CURRENT OBTM
+ 0207 FE03      	CPI	3
+ 0209 CA0C01    	JZ	START	;3=LNO.&CR
+ 020C 85        	ADD	L	;CULC MOV.BTTM
+ 020D 6F        	MOV	L,A
+ 020E 3E00      	MVI	A,0
+ 0210 8C        	ADC	H
+ 0211 67        	MOV	H,A
+ 0212 11006F    	LXI	D,VTOP
+ 0215 CD1201    	CALL	COMPR
+ 0218 D20F07    	JNC	SYSOF
+ 021B 22E008    	SHLD	OBTM
+ 021E D1        	POP	D	;POP CURRENT BTTM
+ 021F CDCD07    	CALL	TR2	;MOV FOR INSERTION
+ 0222 D1        	POP	D	;POP L TOP
+ 0223 E1        	POP	H	;POP L END
+ 0224 CDC207    	CALL	TRNSF
+ 0227 C3C701    	JMP	GETC
+                ;
+ 022A 4C495354  CMDKW:	DB 'LIST'
+ 022E 83        	DB	(LIST SHR 8) OR 80H
+ 022F 39        	DB	LIST AND 0FFH
+ 0230 52554E    	DB 'RUN'
+ 0233 83        	DB	(RUN SHR 8) OR 80H
+ 0234 04        	DB	RUN AND 0FFH
+ 0235 4E4557    	DB 'NEW'
+ 0238 82        	DB	(NEW SHR 8) OR 80H
+ 0239 F5        	DB	NEW AND 0FFH
+ 023A 5359535445	DB 'SYSTEM'
+ 0240 80        	DB	(BOOT SHR 8)OR 80H
+ 0241 00        	DB	BOOT AND 0FFH
+ 0242 4E455854  STMKW:	DB 'NEXT'
+ 0246 84        	DB	(NEXT SHR 8) OR 80H
+ 0247 39        	DB	NEXT AND 0FFH
+ 0248 4C4554    	DB 'LET'
+ 024B 85        	DB	(LET SHR 8) OR 80H
+ 024C 09        	DB	LET AND 0FFH
+ 024D 4946      	DB 'IF'
+ 024F 84        	DB	(IFSTM SHR 8) OR 80H
+ 0250 94        	DB	IFSTM AND 0FFH
+ 0251 474F544F  	DB 'GOTO'
+ 0255 83        	DB	(GOTO SHR 8) OR 80H
+ 0256 28        	DB	GOTO AND 0FFH
+ 0257 474F535542	DB 'GOSUB'
+ 025C 83        	DB	(GOSUB SHR 8) OR 80H
+ 025D 97        	DB	GOSUB AND 0FFH
+ 025E 5245545552	DB 'RETURN'
+ 0264 83        	DB	(RETURN SHR 8) OR 80H
+ 0265 B9        	DB	RETURN AND 0FFH
+ 0266 52454D    	DB 'REM'
+ 0269 84        	DB	(REM SHR 8)OR 80H
+ 026A 8E        	DB	REM AND 0FFH
+ 026B 464F52    	DB 'FOR'
+ 026E 83        	DB	(FOR SHR 8)OR 80H
+ 026F D4        	DB	FOR AND 0FFH
+ 0270 494E505554	DB 'INPUT'
+ 0275 84        	DB	(INPUT SHR 8)OR 80H
+ 0276 AF        	DB	INPUT AND 0FFH
+ 0277 5052494E54	DB 'PRINT'
+ 027C 83        	DB	(PRINT SHR 8)OR 80H
+ 027D 51        	DB	PRINT AND 0FFH
+ 027E 3F        	DB '?'
+ 027F 83        	DB	(PRINT SHR 8)OR 80H
+ 0280 51        	DB	PRINT AND 0FFH
+ 0281 53544F50  	DB 'STOP'
+ 0285 82        	DB	(STOP SHR 8)OR 80H
+ 0286 FE        	DB	STOP AND 0FFH
+                ;
+ 0287 85        	DB	(CMDER SHR 8)OR 80H
+ 0288 03        	DB	CMDER AND 0FFH
+                ;
+                FNKW:
+ 0289 524E44    	DB 'RND'
+ 028C 86        	DB	(RND SHR 8)OR 80H
+ 028D 27        	DB	RND AND 0FFH
+ 028E 414253    	DB 'ABS'
+ 0291 86        	DB	(FNABS SHR 8)OR 80H
+ 0292 4E        	DB	FNABS AND 0FFH
+ 0293 53495A45  	DB 'SIZE'
+ 0297 86        	DB	(RSIZE SHR 8)OR 80H
+ 0298 5A        	DB	RSIZE AND 0FFH
+                ;
+ 0299 86        	DB	(FACT2 SHR 8)OR 80H
+ 029A 05        	DB	FACT2 AND 0FFH
+                ;
+ 029B 544F      KWTO:	DB 'TO'
+ 029D 83        	DB	(FORTO SHR 8)OR 80H
+ 029E E4        	DB	FORTO AND 0FFH
+ 029F 86        	DB	(LERMS SHR 8)OR 80H
+ 02A0 DB        	DB	LERMS AND 0FFH
+ 02A1 53544550  KWSTP:	DB 'STEP'
+ 02A5 83        	DB	(FSTEP SHR 8) OR 80H
+ 02A6 F0        	DB	FSTEP AND 0FFH
+ 02A7 83        	DB	(FSTP1 SHR 8) OR 80H
+ 02A8 F6        	DB	FSTP1 AND 0FFH
+                ;
+                ROPKW:
+ 02A9 3E3D      	DB '>='
+ 02AB 85        	DB	(OGE SHR 8)OR 80H
+ 02AC 24        	DB	OGE AND 0FFH
+ 02AD 23        	DB '#'
+ 02AE 85        	DB	(ONE SHR 8)OR 80H
+ 02AF 2A        	DB	ONE AND 0FFH
+ 02B0 3E        	DB '>'
+ 02B1 85        	DB	(OGT SHR 8)OR 80H
+ 02B2 30        	DB	OGT AND 0FFH
+ 02B3 3D        	DB '='
+ 02B4 85        	DB	(OEQ SHR 8)OR 80H
+ 02B5 3F        	DB	OEQ AND 0FFH
+ 02B6 3C3D      	DB '<='
+ 02B8 85        	DB	(OLE SHR 8)OR 80H
+ 02B9 37        	DB	OLE AND 0FFH
+ 02BA 3C        	DB '<'
+ 02BB 85        	DB	(OLT SHR 8)OR 80H
+ 02BC 45        	DB	OLT AND 0FFH
+ 02BD 85        	DB	(NOROP SHR 8)OR 80H
+ 02BE 4B        	DB	NOROP AND 0FFH
+                ;
+ 02BF 212902    KWCPR:	LXI	H,CMDKW-1
+ 02C2 CD1801    	CALL	SKPBL
+ 02C5 D5        NXTKW:	PUSH	D	;SAVE L TOP
+ 02C6 1A        KWC1:	LDAX	D
+ 02C7 13        	INX	D
+ 02C8 FE2E      	CPI	'.'
+ 02CA CAE302    	JZ	MATKW
+ 02CD 23        	INX	H
+ 02CE BE        	CMP	M
+ 02CF CAC602    	JZ	KWC1
+ 02D2 3E7F      	MVI	A,7FH
+ 02D4 1B        	DCX	D
+ 02D5 BE        	CMP	M
+ 02D6 DAEA02    	JC	EXEQT	;MATCH FULL SPELL
+ 02D9 23        KWSK1:	INX	H
+ 02DA BE        	CMP	M
+ 02DB D2D902    	JNC	KWSK1
+ 02DE 23        	INX	H
+ 02DF D1        	POP	D	;POP L TOP
+ 02E0 C3C502    	JMP	NXTKW
+ 02E3 3E7F      MATKW:	MVI	A,7FH
+ 02E5 23        KWSK2:	INX	H
+ 02E6 BE        	CMP	M
+ 02E7 D2E502    	JNC	KWSK2
+ 02EA CD1801    EXEQT:	CALL	SKPBL
+ 02ED 7E        	MOV	A,M	;FETCH EXEC ADRS
+ 02EE 23        	INX	H
+ 02EF 6E        	MOV	L,M
+ 02F0 E67F      	ANI	7FH
+ 02F2 67        	MOV	H,A
+ 02F3 F1        	POP	PSW	;DUMMY POP
+ 02F4 E9        	PCHL
+                ;
+ 02F5 CDD506    NEW:	CALL	TSCR2
+ 02F8 21000A    	LXI	H,OTOP
+ 02FB 22E008    	SHLD	OBTM
+ 02FE CDD506    STOP:	CALL	TSCR2
+ 0301 C30C01    	JMP	START
+                ;
+ 0304 CDD506    RUN:	CALL	TSCR2
+ 0307 11000A    	LXI	D,OTOP
+                ;
+ 030A 210000    RUN1:	LXI	H,0
+ 030D CD1E07    	CALL	SRCH1	;SRCH MIN-LABEL
+ 0310 DA0C01    	JC	START
+                ;
+ 0313 3EFF      RUN2:	MVI	A,0FFH
+ 0315 32E208    	STA	DRCT	;NOT DIRECT MODE
+ 0318 EB        	XCHG
+ 0319 22CE08    	SHLD	COBJ
+ 031C EB        	XCHG
+ 031D 13        	INX	D
+ 031E 13        	INX	D
+                ;
+ 031F CD4008    NXTGO:	CALL	BREAK
+ 0322 214102    	LXI	H,STMKW-1
+ 0325 C3C502    	JMP	NXTKW
+                ;
+ 0328 CD1705    GOTO:	CALL	EEXPR
+ 032B D5        	PUSH	D
+ 032C CDD506    	CALL	TSCR2
+ 032F CD1607    	CALL	SRCH
+ 0332 C29401    	JNZ	ERR1
+ 0335 F1        	POP	PSW	;DMY POP
+ 0336 C31303    	JMP	RUN2
+                ;
+ 0339 CD6901    LIST:	CALL	GINT
+ 033C CDD506    	CALL	TSCR2
+ 033F CD1607    	CALL	SRCH
+ 0342 DA0C01    LISTL:	JC	START
+ 0345 CDAD07    	CALL	WLINE
+ 0348 CD4008    	CALL	BREAK
+ 034B CD1E07    	CALL	SRCH1
+ 034E C34203    	JMP	LISTL
+                ;
+ 0351 0E06      PRINT:	MVI	C,6	;COLUMN
+                ;
+ 0353 CD5501    	CALL	TEST
+ 0356 3A        	DB	':'
+ 0357 06        	DB	PRNT1-$-1
+ 0358 CD2108    	CALL	CRLF
+ 035B C31F03    	JMP	NXTGO
+                ;
+ 035E CD5501    PRNT1:	CALL	TEST
+ 0361 0D        	DB	0DH
+ 0362 06        	DB	PRNT2-$-1
+ 0363 CD2108    	CALL	CRLF
+ 0366 C30A03    	JMP	RUN1
+                ;
+ 0369 CD5501    PRNT2:	CALL	TEST
+ 036C 23        	DB	'#'
+ 036D 07        	DB	PRNT3-$-1
+ 036E CD1705    	CALL	EEXPR
+ 0371 4D        	MOV	C,L
+ 0372 C37B03    	JMP	PRNT4
+ 0375 CD4E07    PRNT3:	CALL	PR10
+ 0378 C38C03    	JMP	PRNT6
+ 037B CD5501    PRNT4:	CALL	TEST
+ 037E 2C        	DB	','
+ 037F 06        	DB	PRNT5-$-1
+ 0380 CDBB06    	CALL	TSTSC
+ 0383 C36903    	JMP	PRNT2
+                ;
+ 0386 CD2108    PRNT5:	CALL	CRLF
+ 0389 C3B506    	JMP	ENDL
+                ;
+ 038C CD1705    PRNT6:	CALL	EEXPR
+ 038F C5        	PUSH	B
+ 0390 CD6B07    	CALL	WINT
+ 0393 C1        	POP	B
+ 0394 C37B03    	JMP	PRNT4
+                ;
+ 0397 CDF807    GOSUB:	CALL	PSHV
+ 039A CD1705    	CALL	EEXPR
+ 039D D5        	PUSH	D
+ 039E CD1607    	CALL	SRCH
+ 03A1 C29401    	JNZ	ERR1
+ 03A4 2ACE08    	LHLD	COBJ
+ 03A7 E5        	PUSH	H
+ 03A8 2AD008    	LHLD	RSTCK
+ 03AB E5        	PUSH	H
+ 03AC 210000    	LXI	H,0
+ 03AF 22D408    	SHLD	FCNTR
+ 03B2 39        	DAD	SP
+ 03B3 22D008    	SHLD	RSTCK
+ 03B6 C31303    	JMP	RUN2
+                ;
+ 03B9 CDD506    RETURN:	CALL	TSCR2
+ 03BC 2AD008    	LHLD	RSTCK
+ 03BF 7C        	MOV	A,H
+ 03C0 B5        	ORA	L
+ 03C1 CADB06    	JZ	LERMS	;IF RSTACK_TOP=0 ERR
+ 03C4 F9        	SPHL
+ 03C5 E1        	POP	H
+ 03C6 22D008    	SHLD	RSTCK
+ 03C9 E1        	POP	H
+ 03CA 22CE08    	SHLD	COBJ
+ 03CD D1        	POP	D
+ 03CE CDDC07    	CALL	POPV
+ 03D1 C3B506    	JMP	ENDL
+                ;
+ 03D4 CDF807    FOR:	CALL	PSHV
+ 03D7 CD9C06    	CALL	LTSUB
+ 03DA 2B        	DCX	H
+ 03DB 22D408    	SHLD	FCNTR
+ 03DE 219A02    	LXI	H,KWTO-1
+ 03E1 C3C502    	JMP	NXTKW
+                ;
+ 03E4 CD1705    FORTO:	CALL	EEXPR
+ 03E7 22D808    	SHLD	FTOV
+ 03EA 21A002    	LXI	H,KWSTP-1
+ 03ED C3C502    	JMP	NXTKW
+                ;
+ 03F0 CD1705    FSTEP:	CALL	EEXPR
+ 03F3 C3F903    	JMP	FOR0
+                ;
+ 03F6 210100    FSTP1:	LXI	H,1
+ 03F9 22D608    FOR0:	SHLD	FSTPV
+ 03FC 2ACE08    	LHLD	COBJ
+ 03FF 22DA08    	SHLD	FLABL
+ 0402 EB        	XCHG
+ 0403 22DC08    	SHLD	FOBJ
+ 0406 010A00    	LXI	B,0AH
+                
+ 0409 2AD408    	LHLD	FCNTR
+ 040C EB        	XCHG
+ 040D 60        	MOV	H,B
+ 040E 68        	MOV	L,B
+ 040F 39        	DAD	SP
+ 0410 3E        	DB	3EH	;<SKIP NEXT INSTRUCTION>
+ 0411 09        FOR3:	DAD	B
+ 0412 7E        	MOV	A,M
+ 0413 23        	INX	H
+ 0414 B6        	ORA	M
+ 0415 CA3204    	JZ	FOR10
+ 0418 7E        	MOV	A,M
+ 0419 2B        	DCX	H
+ 041A BA        	CMP	D
+ 041B C21104    	JNZ	FOR3
+ 041E 7E        	MOV	A,M
+ 041F BB        	CMP	E
+ 0420 C21104    	JNZ	FOR3
+ 0423 EB        	XCHG
+ 0424 210000    	LXI	H,0
+ 0427 39        	DAD	SP
+ 0428 44        	MOV	B,H
+ 0429 4D        	MOV	C,L
+ 042A 210A00    	LXI	H,0AH
+ 042D 19        	DAD	D
+ 042E CDCD07    	CALL	TR2
+ 0431 F9        	SPHL
+ 0432 2ADC08    FOR10:	LHLD	FOBJ
+ 0435 EB        	XCHG
+ 0436 C3B506    	JMP	ENDL
+                ;
+ 0439 CD2101    NEXT:	CALL	TSTV
+ 043C DADB06    	JC	LERMS
+ 043F 22D208    	SHLD	NCNTR
+ 0442 D5        NEXT1:	PUSH	D
+ 0443 EB        	XCHG
+ 0444 2AD408    	LHLD	FCNTR
+ 0447 7C        	MOV	A,H
+ 0448 B5        	ORA	L
+ 0449 CADC06    	JZ	LEMS0
+ 044C CD1201    	CALL	COMPR
+ 044F CA5C04    	JZ	NEXT2
+ 0452 D1        	POP	D
+ 0453 CDDC07    	CALL	POPV
+ 0456 2AD208    	LHLD	NCNTR
+ 0459 C34204    	JMP	NEXT1
+ 045C 5E        NEXT2:	MOV	E,M
+ 045D 23        	INX	H
+ 045E 56        	MOV	D,M	;DE OLD FOR VALUE
+ 045F 2AD608    	LHLD	FSTPV
+ 0462 E5        	PUSH	H	;HL STEP VALUE
+ 0463 19        	DAD	D
+ 0464 EB        	XCHG
+ 0465 2AD408    	LHLD	FCNTR
+ 0468 73        	MOV	M,E
+ 0469 23        	INX	H
+ 046A 72        	MOV	M,D	;FOR VAR. :=NEW VALUE
+ 046B 2AD808    	LHLD	FTOV
+ 046E F1        	POP	PSW
+ 046F B7        	ORA	A
+ 0470 F27404    	JP	NEXT4
+ 0473 EB        	XCHG
+ 0474 CD9206    NEXT4:	CALL	CMINT
+ 0477 D1        	POP	D
+ 0478 DA8804    	JC	NEXT5
+ 047B 2ADA08    	LHLD	FLABL
+ 047E 22CE08    	SHLD	COBJ
+ 0481 2ADC08    	LHLD	FOBJ
+ 0484 EB        	XCHG
+ 0485 C3B506    	JMP	ENDL
+                ;
+ 0488 CDDC07    NEXT5:	CALL	POPV
+ 048B C3B506    	JMP	ENDL
+                ;
+ 048E 210000    REM:	LXI	H,0
+ 0491 C39C04    	JMP	IFST2
+                ;
+ 0494 CD1705    IFSTM:	CALL	EEXPR
+ 0497 7C        	MOV	A,H
+ 0498 B5        	ORA	L
+ 0499 C21F03    	JNZ	NXTGO
+ 049C CD3607    IFST2:	CALL	SKPL2
+ 049F D21303    	JNC	RUN2
+ 04A2 C30C01    	JMP	START
+                ;
+ 04A5 2AD208    ERRIN:	LHLD	NCNTR
+ 04A8 F9        	SPHL
+ 04A9 E1        	POP	H
+ 04AA 22CE08    	SHLD	COBJ
+ 04AD D1        	POP	D
+ 04AE D1        	POP	D
+ 04AF D5        INPUT:	PUSH	D
+ 04B0 CD4E07    	CALL	PR10
+ 04B3 C3BF04    	JMP	INPT2
+                ;
+ 04B6 CD2101    INPT1:	CALL	TSTV
+ 04B9 DAFA04    	JC	INPT6
+ 04BC C3D104    	JMP	INPT4
+ 04BF D5        INPT2:	PUSH	D
+ 04C0 CD2101    	CALL	TSTV
+ 04C3 DADB06    	JC	LERMS
+ 04C6 1A        	LDAX	D
+ 04C7 4F        	MOV	C,A
+ 04C8 AF        	XRA	A
+ 04C9 12        	STAX	D
+ 04CA D1        	POP	D
+ 04CB CD4007    	CALL	MSG
+ 04CE 79        	MOV	A,C
+ 04CF 1B        	DCX	D
+ 04D0 12        	STAX	D
+                ;
+ 04D1 D5        INPT4:	PUSH	D
+ 04D2 EB        	XCHG
+ 04D3 2ACE08    	LHLD	COBJ
+ 04D6 E5        	PUSH	H
+ 04D7 21AF04    	LXI	H,INPUT
+ 04DA 22CE08    	SHLD	COBJ
+ 04DD 210000    	LXI	H,0
+ 04E0 39        	DAD	SP
+ 04E1 22D208    	SHLD	NCNTR
+ 04E4 D5        	PUSH	D
+ 04E5 3E3A      	MVI	A,':'
+ 04E7 CD6E08    	CALL	GETL
+ 04EA 110009    	LXI	D,LBUF
+ 04ED CD1705    	CALL	EEXPR
+ 04F0 D1        	POP	D
+ 04F1 EB        	XCHG
+ 04F2 73        	MOV	M,E
+ 04F3 23        	INX	H
+ 04F4 72        	MOV	M,D
+ 04F5 E1        	POP	H
+ 04F6 22CE08    	SHLD	COBJ
+ 04F9 D1        	POP	D
+                ;
+ 04FA F1        INPT6:	POP	PSW
+ 04FB CD5501    	CALL	TEST
+ 04FE 2C        	DB	','
+ 04FF 14        	DB	LTEND-$-1
+ 0500 C3AF04    	JMP	INPUT
+                ;
+ 0503 1A        CMDER:	LDAX	D
+ 0504 FE0D      	CPI	0DH
+ 0506 CAB506    	JZ	ENDL
+                ;
+ 0509 CD9C06    LET:	CALL	LTSUB
+ 050C CD5501    	CALL	TEST
+ 050F 2C        	DB	','
+ 0510 03        	DB	LTEND-$-1
+ 0511 C30905    	JMP	LET
+ 0514 C3B506    LTEND:	JMP	ENDL
+                ;
+                ;
+ 0517 CD6205    EEXPR:	CALL	EXPR	;EXTENDED EXP.
+ 051A E5        	PUSH H
+ 051B C31E05    	JMP	RST31
+                ;
+ 051E 21A802    RST31:	LXI	H,ROPKW-1
+ 0521 C3C502    	JMP	NXTKW
+                ;
+ 0524 CD4D05    OGE:	CALL	IFEXQ
+ 0527 D8        	RC
+ 0528 6F        	MOV	L,A
+ 0529 C9        	RET
+                ;
+ 052A CD4D05    ONE:	CALL	IFEXQ
+ 052D C8        	RZ
+ 052E 6F        	MOV	L,A
+ 052F C9        	RET
+                ;
+ 0530 CD4D05    OGT:	CALL	IFEXQ
+ 0533 C8        	RZ
+ 0534 D8        	RC
+ 0535 6F        	MOV	L,A
+ 0536 C9        	RET
+                ;
+ 0537 CD4D05    OLE:	CALL	IFEXQ
+ 053A 6F        	MOV	L,A
+ 053B C8        	RZ
+ 053C D8        	RC
+ 053D 6C        	MOV	L,H
+ 053E C9        	RET
+                ;
+ 053F CD4D05    OEQ:	CALL	IFEXQ
+ 0542 C0        	RNZ
+ 0543 6F        	MOV	L,A
+ 0544 C9        	RET
+                ;
+ 0545 CD4D05    OLT:	CALL	IFEXQ
+ 0548 D0        	RNC
+ 0549 6F        	MOV	L,A
+ 054A C9        	RET
+                ;
+ 054B E1        NOROP:	POP	H
+ 054C C9        	RET
+                ;
+ 054D 79        IFEXQ:	MOV	A,C
+ 054E E1        	POP	H
+ 054F C1        	POP	B
+ 0550 E5        	PUSH	H
+ 0551 C5        	PUSH	B
+ 0552 4F        	MOV	C,A
+ 0553 CD6205    	CALL	EXPR
+ 0556 EB        	XCHG
+ 0557 E3        	XTHL
+ 0558 CD9206    	CALL	CMINT
+ 055B D1        	POP	D
+ 055C 210000    	LXI	H,0
+ 055F 3E01      	MVI	A,1
+ 0561 C9        	RET
+                ;
+ 0562 CD5501    EXPR:	CALL	TEST
+ 0565 2D        	DB	'-'
+ 0566 06        	DB	EXPR1-$-1
+ 0567 210000    	LXI	H,0
+ 056A C39405    	JMP	NEGA1
+                ;
+ 056D CD5501    EXPR1:	CALL	TEST
+ 0570 2B        	DB	'+'
+ 0571 00        	DB	EXPR3-$-1
+ 0572 CD9E05    EXPR3:	CALL	TERM
+                ;
+ 0575 CD5501    EXPR2:	CALL	TEST
+ 0578 2B        	DB	'+'
+ 0579 15        	DB	NEGA0-$-1
+ 057A E5        	PUSH	H
+ 057B CD9E05    	CALL	TERM
+ 057E EB        ADDDBL:	XCHG
+ 057F E3        	XTHL
+ 0580 7C        	MOV	A,H
+ 0581 AA        	XRA	D
+ 0582 7A        	MOV	A,D
+ 0583 19        	DAD	D
+ 0584 D1        	POP	D
+ 0585 FA7505    	JM	EXPR2
+ 0588 AC        	XRA	H
+ 0589 F27505    	JP	EXPR2
+ 058C C39301    	JMP	ERROR
+                ;
+ 058F CD5501    NEGA0:	CALL	TEST
+ 0592 2D        	DB	'-'
+ 0593 8F        	DB	EXPRT-$-1
+                ;
+ 0594 E5        NEGA1:	PUSH	H
+ 0595 CD9E05    	CALL	TERM
+ 0598 CD8706    	CALL	TWSCP
+ 059B C37E05    	JMP	ADDDBL
+                ;
+ 059E CDFF05    TERM:	CALL	FACTR
+                ;
+ 05A1 CD5501    MULT:	CALL	TEST
+ 05A4 2A        	DB	'*'
+ 05A5 2C        	DB	DIV-$-1
+ 05A6 E5        	PUSH	H
+ 05A7 CDFF05    	CALL	FACTR
+ 05AA 0600      	MVI	B,0
+ 05AC CD8406    	CALL	ABS
+ 05AF EB        	XCHG
+ 05B0 E3        	XTHL
+ 05B1 CD8406    	CALL	ABS
+ 05B4 7C        	MOV	A,H
+ 05B5 B7        	ORA	A
+ 05B6 CABF05    	JZ	MULT1
+ 05B9 7A        	MOV	A,D
+ 05BA B2        	ORA	D
+ 05BB EB        	XCHG
+ 05BC C29401    	JNZ	ERR1
+ 05BF 7D        MULT1:	MOV	A,L
+ 05C0 210000    	LXI	H,0
+ 05C3 B7        	ORA	A
+ 05C4 CAF105    	JZ	TERM1
+ 05C7 19        MULTL:	DAD	D
+ 05C8 DA9401    	JC	ERR1
+ 05CB 3D        	DCR	A
+ 05CC C2C705    	JNZ	MULTL
+ 05CF C3F105    	JMP	TERM1
+                ;
+ 05D2 CD5501    DIV:	CALL	TEST
+ 05D5 2F        	DB	'/'
+ 05D6 4C        	DB	EXPRT-$-1
+ 05D7 E5        	PUSH	H
+ 05D8 CDFF05    	CALL	FACTR
+ 05DB 0600      	MVI	B,0
+ 05DD CD8406    	CALL	ABS
+ 05E0 EB        	XCHG
+ 05E1 E3        	XTHL
+ 05E2 CD8406    	CALL	ABS
+ 05E5 7A        	MOV	A,D
+ 05E6 B3        	ORA	E
+ 05E7 CA9401    	JZ	ERR1
+ 05EA C5        	PUSH	B
+ 05EB CD6706    	CALL	DIVID
+ 05EE 60        	MOV	H,B
+ 05EF 69        	MOV	L,C
+ 05F0 C1        	POP	B
+ 05F1 D1        TERM1:	POP	D
+ 05F2 7C        	MOV	A,H
+ 05F3 B7        	ORA	A
+ 05F4 FA9301    	JM	ERROR
+ 05F7 78        	MOV	A,B
+ 05F8 B7        	ORA	A
+ 05F9 FC8706    	CM	TWSCP
+ 05FC C3A105    	JMP	MULT
+                ;
+ 05FF 218802    FACTR:	LXI	H,FNKW-1
+ 0602 C3C502    	JMP	NXTKW
+                ;
+ 0605 CD2101    FACT2:	CALL	TSTV
+ 0608 DA1006    	JC	FNUM
+ 060B 7E        	MOV	A,M
+ 060C 23        	INX	H
+ 060D 66        	MOV	H,M
+ 060E 6F        	MOV	L,A
+ 060F C9        	RET
+                ;
+ 0610 CD6901    FNUM:	CALL	GINT
+ 0613 78        	MOV	A,B
+ 0614 B7        	ORA	A
+ 0615 C0        	RNZ
+                ;
+ 0616 CD5501    EXPR0:	CALL	TEST
+ 0619 28        	DB	'('
+ 061A 09        	DB	EXPER-$-1
+ 061B CD1705    	CALL	EEXPR
+ 061E CD5501    	CALL	TEST
+ 0621 29        	DB	')'
+ 0622 01        	DB	EXPER-$-1
+ 0623 C9        EXPRT:	RET
+ 0624 C3DB06    EXPER:	JMP	LERMS
+                ;
+ 0627 CD1606    RND:	CALL	EXPR0
+ 062A 7C        	MOV	A,H
+ 062B B7        	ORA	A
+ 062C FA9301    	JM	ERROR
+ 062F B5        	ORA	L
+ 0630 CA9301    	JZ	ERROR
+ 0633 D5        	PUSH	D
+ 0634 EB        	XCHG
+ 0635 2ADE08    	LHLD	RWRK
+ 0638 7D        	MOV	A,L
+ 0639 1F        	RAR
+ 063A AD        	XRA	L
+ 063B 29        	DAD	H
+ 063C CE00      	ACI	0
+ 063E 2F        	CMA
+ 063F E601      	ANI	01H
+ 0641 B5        	ORA	L
+ 0642 6F        	MOV	L,A
+ 0643 22DE08    	SHLD	RWRK
+ 0646 C5        	PUSH	B
+ 0647 CD6706    	CALL	DIVID
+ 064A C1        	POP	B
+ 064B D1        	POP	D
+ 064C 23        	INX	H
+ 064D C9        	RET
+                ;
+ 064E CD1606    FNABS:	CALL	EXPR0
+ 0651 CD8406    	CALL	ABS
+ 0654 7C        	MOV	A,H
+ 0655 B4        	ORA	H
+ 0656 FA9301    	JM	ERROR
+ 0659 C9        	RET
+                ;
+ 065A 2AE008    RSIZE:	LHLD	OBTM
+ 065D D5        	PUSH	D
+ 065E EB        	XCHG
+ 065F 21006F    	LXI	H,VTOP
+ 0662 CD7D06    	CALL	DIFF
+ 0665 D1        	POP	D
+ 0666 C9        	RET
+                ;
+ 0667 E5        DIVID:	PUSH	H
+ 0668 6C        	MOV	L,H
+ 0669 2600      	MVI	H,0
+ 066B CD7206    	CALL	DIVSB
+ 066E 41        	MOV	B,C
+ 066F 7D        	MOV	A,L
+ 0670 E1        	POP	H
+ 0671 67        	MOV	H,A
+ 0672 0EFF      DIVSB:	MVI	C,0FFH
+ 0674 0C        DIVS1:	INR	C
+ 0675 CD7D06    	CALL	DIFF
+ 0678 D27406    	JNC	DIVS1
+ 067B 19        	DAD	D
+ 067C C9        	RET
+                ;
+ 067D 7D        DIFF:	MOV	A,L
+ 067E 93        	SUB	E
+ 067F 6F        	MOV	L,A
+ 0680 7C        	MOV	A,H
+ 0681 9A        	SBB	D
+ 0682 67        	MOV	H,A
+ 0683 C9        	RET
+                ;
+ 0684 7C        ABS:	MOV	A,H
+ 0685 B7        	ORA	A
+ 0686 F0        	RP
+ 0687 AF        TWSCP:	XRA	A
+ 0688 95        	SUB	L
+ 0689 6F        	MOV	L,A
+ 068A 9C        	SBB	H
+ 068B 95        	SUB	L
+ 068C 67        	MOV	H,A
+ 068D 78        	MOV	A,B
+ 068E EE80      	XRI	80H
+ 0690 47        	MOV	B,A
+ 0691 C9        	RET
+                ;
+ 0692 7C        CMINT:	MOV	A,H
+ 0693 AA        	XRA	D
+ 0694 F29806    	JP	CPIN1
+ 0697 EB        	XCHG
+ 0698 CD1201    CPIN1:	CALL	COMPR
+ 069B C9        	RET
+                ;
+ 069C CD2101    LTSUB:	CALL	TSTV
+ 069F DADB06    	JC	LERMS
+ 06A2 E5        	PUSH	H
+ 06A3 CD5501    	CALL	TEST
+ 06A6 3D        	DB	'='
+ 06A7 0A        	DB	LTERR-$-1
+ 06A8 CD1705    	CALL	EEXPR
+ 06AB 44        	MOV	B,H
+ 06AC 4D        	MOV	C,L
+ 06AD E1        	POP	H
+ 06AE 71        	MOV	M,C
+ 06AF 23        	INX	H
+ 06B0 70        	MOV	M,B
+ 06B1 C9        	RET
+ 06B2 C3DB06    LTERR:	JMP	LERMS
+                ;
+ 06B5 CDBB06    ENDL:	CALL TSTSC	;TEST END OF LINE
+ 06B8 C3DB06    	JMP	LERMS
+                ;
+ 06BB CD5501    TSTSC:	CALL	TEST
+ 06BE 3A        	DB	':'
+ 06BF 04        	DB	TSCR1-$-1
+ 06C0 F1        	POP	PSW
+ 06C1 C31F03    	JMP	NXTGO
+                ;
+ 06C4 CD5501    TSCR1:	CALL	TEST
+ 06C7 0D        	DB	0DH
+ 06C8 0B        	DB	TSRTN-$-1
+ 06C9 F1        	POP	PSW
+ 06CA 3AE208    	LDA	DRCT
+ 06CD B7        	ORA	A
+ 06CE CA0C01    	JZ	START
+ 06D1 C30A03    	JMP	RUN1
+ 06D4 C9        TSRTN:	RET
+                ;
+ 06D5 CD1801    TSCR2:	CALL	SKPBL
+ 06D8 FE0D      	CPI	0DH
+ 06DA C8        	RZ
+                ;
+ 06DB D5        LERMS:	PUSH	D
+ 06DC 11A201    LEMS0:	LXI	D,WHTMS
+ 06DF 97        LEMS1:	SUB	A
+ 06E0 CD4007    	CALL	MSG
+ 06E3 D1        	POP	D
+ 06E4 1A        	LDAX	D
+ 06E5 F5        	PUSH	PSW
+ 06E6 AF        	XRA	A
+ 06E7 12        	STAX	D
+ 06E8 2ACE08    	LHLD	COBJ
+ 06EB E5        	PUSH	H
+ 06EC 7E        	MOV	A,M
+ 06ED 23        	INX	H
+ 06EE B6        	ORA	M
+ 06EF D1        	POP	D
+ 06F0 CA0C01    	JZ	START
+ 06F3 7E        	MOV	A,M
+ 06F4 B7        	ORA	A
+ 06F5 FAA504    	JM	ERRIN
+ 06F8 CDAD07    	CALL	WLINE
+ 06FB 1B        	DCX	D
+ 06FC F1        	POP	PSW
+ 06FD 12        	STAX	D
+ 06FE AF        	XRA	A
+ 06FF D5        	PUSH	D
+ 0700 110D07    	LXI	D,ERRQ
+ 0703 CD4007    	CALL	MSG
+ 0706 D1        	POP	D
+ 0707 CD4007    	CALL	MSG
+ 070A C30C01    	JMP	START
+                ;
+ 070D 3F        ERRQ:	DB	'?'
+ 070E 00        	DB	0
+                ;
+ 070F D5        SYSOF:	PUSH	D
+ 0710 11A801    SYSO1:	LXI	D,SRYMS
+ 0713 C3DF06    	JMP	LEMS1
+                ;
+ 0716 7C        SRCH:	MOV	A,H
+ 0717 B7        	ORA	A
+ 0718 FA9301    	JM	ERROR
+ 071B 11000A    	LXI	D,OTOP
+ 071E E5        SRCH1:	PUSH	H
+ 071F 2AE008    	LHLD	OBTM
+ 0722 2B        	DCX	H
+ 0723 CD1201    	CALL	COMPR
+ 0726 E1        	POP	H
+ 0727 D8        	RC
+ 0728 1A        	LDAX	D
+ 0729 95        	SUB	L
+ 072A 47        	MOV	B,A
+ 072B 13        	INX	D
+ 072C 1A        	LDAX	D
+ 072D 9C        	SBB	H
+ 072E DA3507    	JC	SKPL1
+ 0731 1B        	DCX	D
+ 0732 B0        	ORA	B
+ 0733 C9        	RET
+                ;
+ 0734 13        SKIPL:	INX	D
+ 0735 13        SKPL1:	INX	D
+ 0736 1A        SKPL2:	LDAX	D
+ 0737 FE0D      	CPI	0DH
+ 0739 C23507    	JNZ	SKPL1
+ 073C 13        	INX	D
+ 073D C31E07    	JMP	SRCH1
+                ;
+ 0740 47        MSG:	MOV	B,A
+ 0741 1A        MSG1:	LDAX	D
+ 0742 13        	INX	D
+ 0743 B8        	CMP	B
+ 0744 C8        	RZ
+ 0745 CD2308    	CALL	PUT
+ 0748 FE0D      	CPI	0DH
+ 074A C24107    	JNZ	MSG1
+ 074D C9        	RET
+                ;
+ 074E CD5501    PR10:	CALL	TEST
+ 0751 22        	DB	'"'
+ 0752 0D        	DB	PR13-$-1
+ 0753 CD4007    PR11:	CALL	MSG
+ 0756 FE0D      	CPI	0DH
+ 0758 E1        	POP	H
+ 0759 CA0A03    	JZ	RUN1
+ 075C 23        PR12:	INX	H
+ 075D 23        	INX	H
+ 075E 23        	INX	H
+ 075F E9        	PCHL
+                ;
+ 0760 CD5501    PR13:	CALL	TEST
+ 0763 27        	DB	''''
+ 0764 05        	DB	PR15-$-1
+ 0765 3E27      	MVI	A,27H
+ 0767 C35307    	JMP	PR11
+                ;
+                ;
+ 076A C9        PR15:	RET
+                ;
+ 076B D5        WINT:	PUSH	D
+ 076C 110A00    	LXI	D,0AH
+ 076F D5        	PUSH	D
+ 0770 42        	MOV	B,D
+ 0771 0D        	DCR	C
+ 0772 CD8406    	CALL	ABS
+ 0775 F27B07    	JP	WINT1
+ 0778 062D      	MVI	B,'-'
+ 077A 0D        	DCR	C
+ 077B C5        WINT1:	PUSH	B
+ 077C CD6706    WINT2:	CALL	DIVID
+ 077F 78        	MOV	A,B
+ 0780 B1        	ORA	C
+ 0781 CA8C07    	JZ	WINT3
+ 0784 E3        	XTHL
+ 0785 2D        	DCR	L
+ 0786 E5        	PUSH	H
+ 0787 60        	MOV	H,B
+ 0788 69        	MOV	L,C
+ 0789 C37C07    	JMP	WINT2
+ 078C C1        WINT3:	POP	B
+ 078D 0D        WINT4:	DCR	C
+ 078E 79        	MOV	A,C
+ 078F B7        	ORA	A
+ 0790 FA9B07    	JM	WINT5
+ 0793 3E20      	MVI	A,' '
+ 0795 CD2308    	CALL	PUT
+ 0798 C38D07    	JMP	WINT4
+ 079B 78        WINT5:	MOV	A,B
+ 079C CD2308    	CALL	PUT
+ 079F 5D        	MOV	E,L
+ 07A0 7B        WINT6:	MOV	A,E
+ 07A1 FE0A      	CPI	0AH
+ 07A3 D1        	POP	D
+ 07A4 C8        	RZ
+ 07A5 C630      	ADI	'0'
+ 07A7 CD2308    	CALL	PUT
+ 07AA C3A007    	JMP	WINT6
+                ;
+ 07AD 1A        WLINE:	LDAX	D
+ 07AE 6F        	MOV	L,A
+ 07AF 13        	INX	D
+ 07B0 1A        	LDAX	D
+ 07B1 67        	MOV	H,A
+ 07B2 13        	INX	D
+ 07B3 0E04      	MVI	C,4
+ 07B5 CD6B07    	CALL	WINT
+ 07B8 3E20      	MVI	A,' '
+ 07BA CD2308    	CALL	PUT
+ 07BD AF        	XRA	A
+ 07BE CD4007    	CALL	MSG
+ 07C1 C9        	RET
+                ;
+ 07C2 CD1201    TRNSF:	CALL	COMPR
+ 07C5 C8        	RZ
+ 07C6 1A        	LDAX	D
+ 07C7 02        	STAX	B
+ 07C8 13        	INX	D
+ 07C9 03        	INX	B
+ 07CA C3C207    	JMP	TRNSF
+                ;
+ 07CD 78        TR2:	MOV	A,B
+ 07CE 92        	SUB	D
+ 07CF C2D507    	JNZ	TR2E
+ 07D2 79        	MOV	A,C
+ 07D3 93        	SUB	E
+ 07D4 C8        	RZ
+ 07D5 1B        TR2E:	DCX	D
+ 07D6 2B        	DCX	H
+ 07D7 1A        	LDAX	D
+ 07D8 77        	MOV	M,A
+ 07D9 C3CD07    	JMP	TR2
+                ;
+ 07DC C1        POPV:	POP	B
+ 07DD E1        	POP	H
+ 07DE 22D408    	SHLD	FCNTR
+ 07E1 7C        	MOV	A,H
+ 07E2 B5        	ORA	L
+ 07E3 CAF607    	JZ	NPOP
+ 07E6 E1        	POP	H
+ 07E7 22D608    	SHLD	FSTPV
+ 07EA E1        	POP	H
+ 07EB 22D808    	SHLD	FTOV
+ 07EE E1        	POP	H
+ 07EF 22DA08    	SHLD	FLABL
+ 07F2 E1        	POP	H
+ 07F3 22DC08    	SHLD	FOBJ
+ 07F6 C5        NPOP:	PUSH	B
+ 07F7 C9        	RET
+                ;
+ 07F8 210070    PSHV:	LXI	H,MSTK
+ 07FB CD8706    	CALL	TWSCP
+ 07FE C1        	POP	B
+ 07FF 39        	DAD	SP
+ 0800 D20F07    	JNC	SYSOF
+ 0803 2AD408    	LHLD	FCNTR
+ 0806 7C        	MOV	A,H
+ 0807 B5        	ORA	L
+ 0808 CA1E08    	JZ	NPSH
+ 080B 2ADC08    	LHLD	FOBJ
+ 080E E5        	PUSH	H
+ 080F 2ADA08    	LHLD	FLABL
+ 0812 E5        	PUSH	H
+ 0813 2AD808    	LHLD	FTOV
+ 0816 E5        	PUSH	H
+ 0817 2AD608    	LHLD	FSTPV
+ 081A E5        	PUSH	H
+ 081B 2AD408    	LHLD	FCNTR
+ 081E E5        NPSH:	PUSH	H
+ 081F C5        	PUSH	B
+ 0820 C9        	RET
+                ;
+                ;
+ 0821 3E0D      CRLF:	MVI	A,0DH
+ 0823 CD2F08    PUT:	CALL	PUT1
+ 0826 FE0D      	CPI	0DH
+ 0828 C0        	RNZ
+ 0829 F5        	PUSH	PSW
+ 082A 3E0A      	MVI	A,0AH
+ 082C C33208    	JMP	CRLF1
+ 082F B7        PUT1:	ORA	A
+ 0830 C8        	RZ
+ 0831 F5        	PUSH	PSW
+ 0832 C5        CRLF1:	PUSH	B
+ 0833 D5        	PUSH	D
+ 0834 E5        	PUSH	H
+ 0835 0E06      	MVI	C,6
+ 0837 5F        	MOV	E,A
+ 0838 CD0500    	CALL	BDOS
+ 083B E1        	POP	H
+ 083C D1        	POP	D
+ 083D C1        	POP	B
+ 083E F1        	POP	PSW
+ 083F C9        	RET
+                ;
+ 0840 C5        BREAK:	PUSH	B
+ 0841 D5        	PUSH	D
+ 0842 E5        	PUSH	H
+ 0843 0E06      	MVI	C,06H
+ 0845 1EFF      	MVI	E,0FFH
+ 0847 CD0500    	CALL	BDOS
+ 084A E1        	POP	H
+ 084B D1        	POP	D
+ 084C C1        	POP	B
+ 084D B7        	ORA	A
+ 084E C8        	RZ
+ 084F FE03      	CPI	3	;CTRL_C
+ 0851 CA0C01    	JZ	START
+ 0854 FE13      	CPI	13H	;CTRL_S
+ 0856 C0        	RNZ
+                ;
+ 0857 C5        GET:	PUSH	B
+ 0858 D5        	PUSH	D
+ 0859 E5        	PUSH	H
+ 085A 0E06      G1:	MVI	C,6
+ 085C 1EFF      	MVI	E,0FFH
+ 085E CD0500    	CALL	BDOS
+ 0861 B7        	ORA	A
+ 0862 CA5A08    	JZ	G1
+ 0865 E1        	POP	H
+ 0866 D1        	POP	D
+ 0867 C1        	POP	B
+ 0868 FE03      	CPI	3
+ 086A CA0C01    	JZ	START
+ 086D C9        	RET
+                ;
+ 086E CD2308    GETL:	CALL	PUT
+ 0871 110009    	LXI	D,LBUF
+ 0874 CD5708    GETL1:	CALL	GET
+ 0877 FE08      	CPI	back$spc	;BACK-SPACE
+ 0879 CA9408    	JZ	RUB
+ 087C FE18      	CPI	18H	;CAN
+ 087E CAA308    	JZ	CAN
+ 0881 CD2308    	CALL	PUT
+ 0884 12        	STAX	D
+ 0885 13        	INX	D
+ 0886 FE0D      	CPI	0DH
+ 0888 C8        	RZ		;CRLF & RET
+ 0889 7B        	MOV	A,E
+ 088A FE7F      	CPI	7FH	;BUF FULL?
+ 088C C27408    	JNZ	GETL1
+ 088F 3E07      	MVI	A,7	;BELL
+ 0891 CD2308    	CALL	PUT
+                ;
+ 0894 7B        RUB:	MOV	A,E
+ 0895 FE00      	CPI	LBUF AND 0FFH
+ 0897 CAA808    	JZ	CAN1
+ 089A 3E08      	MVI	A,back$spc
+ 089C CD2308    	CALL	PUT
+ 089F 1B        	DCX	D
+ 08A0 C37408    	JMP	GETL1
+                ;
+ 08A3 3E5C      CAN:	MVI	A,'\'
+ 08A5 CD2308    	CALL	PUT
+ 08A8 CD2108    CAN1:	CALL	CRLF
+ 08AB 3E3E      	MVI	A,'>'
+ 08AD C36E08    	JMP	GETL
+                ;
+                ;
+ 08B0 11B808    INIT:	LXI	D,INIMSG
+ 08B3 AF        	XRA	A
+ 08B4 CD4007    	CALL	MSG
+ 08B7 C9        	RET
+                ;
+                INIMSG:
+ 08B8 2050616C6F	DB	' Palo Alto'
+ 08C2 2054494E59	DB	' TINY BASIC'
+ 08CD 0D        	DB	0Dh
+                ;
+ 08CE           COBJ	DS	2
+ 08D0           RSTCK	DS	2
+ 08D2           NCNTR	DS	2
+ 08D4           FCNTR	DS	2
+ 08D6           FSTPV	DS	2
+ 08D8           FTOV	DS	2
+ 08DA           FLABL	DS	2
+ 08DC           FOBJ	DS	2
+ 08DE           RWRK	DS	2
+ 08E0           OBTM	DS	2
+ 08E2           DRCT	DS	1
+ 0900           	ORG	($ AND 0FF00H)+100H
+ 0900           LBUF	DS	256
+                ;
+ 0A00 =         OTOP	equ	$	;basic text starts here
+                ;
+ 0A00           	END
+

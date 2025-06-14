@@ -1,0 +1,15 @@
+xsub
+asm LLLBASIC
+asm LLLFP
+asm LLLMON
+ddt
+f100,2000,0
+illlbasic.hex
+r
+illlfp.hex
+r
+illlmon.hex
+r
+g0
+save 26 lllbasic.com
+

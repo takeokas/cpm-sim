@@ -1,4 +1,4 @@
-# Windows WSL Ubuntu用メモ
+# Windows WSL Ubuntu用メモ,下記を install してから、make
 
 sudo apt install cc
 sudo apt install make

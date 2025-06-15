@@ -24,6 +24,12 @@
   A> UNIX  
   で、シミュレータは終了します。(Linuxのときも「UNIX」と入力すること)  
 
+# i8080空間 CP/M メモリ・マップ
+  BDOS_TOP:  0xF906 (defined in bdos.h)  
+  default User stack:BIOS_TOP-2 (defined DEF_USR_STK in bdos.h)  
+  BIOS: 0xFA00  
+  dph$base: 0xFB00  
+
 # フラグの遅延評価
   本8080CPU シミュレータは。下記のスライドの、P.12 に書いた、フラグの値が必要になるまで、計算を遅延させるような実装を行っています。  
   https://www.slideshare.net/slideshow/flag-iroiroa150605c1/49064393
